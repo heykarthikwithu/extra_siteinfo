@@ -129,6 +129,11 @@ function extra_siteinfo_page() {
       '#theme' => 'item_list',
       '#items' => extra_siteinfo_get_currently_loggedin_users_data(),
     ),
+    'modules' => array(
+      '#title' => 'Modules',
+      '#theme' => 'item_list',
+      '#items' => extra_siteinfo_get_modules_data(),
+    ),
   );
   return $output;
 }
@@ -258,6 +263,62 @@ function extra_siteinfo_get_currently_loggedin_users_data() {
       array(
         '@ex_get_data' => $num_of_currently_loggedin_users,
         '@cd' => $base_url . '/admin/reports/extra-siteinfo/currently-loggedin-users',
+      )
+    ),
+  );
+}
+
+/**
+ * Function returns the modules data.
+ */
+function extra_siteinfo_get_modules_data() {
+  $files = drupal_system_listing('/\.module$/', 'modules', 'name', 0);
+
+  system_get_files_database($files, 'module');
+
+  ksort($files);
+
+  $core_installed = array();
+  $core_enabled = array();
+  $core_disabled = array();
+
+  $contrib_installed = array();
+  $contrib_enabled = array();
+  $contrib_disabled = array();
+
+  foreach ($files as $info) {
+    $filename = $info->filename;
+    $name = $info->name;
+    $status = $info->status;
+
+    $contrib = strpos($filename, "sites/all/modules/") === 0;
+
+    if ($contrib) {
+      $contrib_installed[] = $name;
+      if ($status) $contrib_enabled[] = $name;
+      else $contrib_disabled[] = $name;
+    } else {
+      $core_installed[] = $name;
+      if ($status) $core_enabled[] = $name;
+      else $core_disabled[] = $name;
+    }
+  }
+  // We would get the data in the form of check this..
+  /*print "Installed Core Modules: " . join(", ", $core_installed) . "\n\n";
+  print "Enabled Core Modules: " . join(", ", $core_enabled) . "\n\n";
+  print "Disabled Core Modules: " . join(", ", $core_disabled) . "\n\n";
+
+  print "Installed Contrib Modules: " . join(", ", $contrib_installed) . "\n\n";
+  print "Enabled Contrib Modules: " . join(", ", $contrib_enabled) . "\n\n";
+  print "Disabled Contrib Modules: " . join(", ", $contrib_disabled) . "\n\n";*/
+
+  // Should figure out how the data to be rendered..
+  return array(
+    // If showing "1", then you are the only one user who is currently loggedin.
+    t('Currently logged-in users : @ex_get_data (<a href ="@cd">click here for details</a>)',
+      array(
+        /*'@ex_get_data' => $num_of_currently_loggedin_users,
+        '@cd' => $base_url . '/admin/reports/extra-siteinfo/currently-loggedin-users',*/
       )
     ),
   );
